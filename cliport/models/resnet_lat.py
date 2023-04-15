@@ -22,63 +22,68 @@ class ResNet45_10s(nn.Module):
     def _make_layers(self):
         # conv1
         self.conv1 = nn.Sequential(
-            nn.Conv2d(self.input_dim, 64, stride=1, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64) if self.batchnorm else nn.Identity(),
+            nn.Conv2d(self.input_dim, 128, stride=1, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128) if self.batchnorm else nn.Identity(),
             nn.ReLU(True),
         )
 
         # fcn
         self.layer1 = nn.Sequential(
-            ConvBlock(64, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-            IdentityBlock(64, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
-        )
-
-        self.layer2 = nn.Sequential(
-            ConvBlock(64, [128, 128, 128], kernel_size=3, stride=2, batchnorm=self.batchnorm),
+            ConvBlock(128, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             IdentityBlock(128, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
         )
 
-        self.layer3 = nn.Sequential(
+
+        self.layer2 = nn.Sequential(
             ConvBlock(128, [256, 256, 256], kernel_size=3, stride=2, batchnorm=self.batchnorm),
             IdentityBlock(256, [256, 256, 256], kernel_size=3, stride=1, batchnorm=self.batchnorm),
         )
 
-        self.layer4 = nn.Sequential(
+        self.layer3 = nn.Sequential(
             ConvBlock(256, [512, 512, 512], kernel_size=3, stride=2, batchnorm=self.batchnorm),
             IdentityBlock(512, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
         )
 
-        self.layer5 = nn.Sequential(
+        self.layer4 = nn.Sequential(
             ConvBlock(512, [1024, 1024, 1024], kernel_size=3, stride=2, batchnorm=self.batchnorm),
             IdentityBlock(1024, [1024, 1024, 1024], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+        )
+        self.layer5 = nn.Sequential(
+            ConvBlock(1024, [2048, 2048, 2048], kernel_size=3, stride=2, batchnorm=self.batchnorm),
+            IdentityBlock(2048, [2048, 2048, 2048], kernel_size=3, stride=1, batchnorm=self.batchnorm),
         )
 
         # head
         self.layer6 = nn.Sequential(
+            ConvBlock(2048, [1024,1024, 1024], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+            IdentityBlock(1024, [1024, 1024, 1024], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+            nn.UpsamplingBilinear2d(scale_factor=2),
+        )
+        self.layer7 = nn.Sequential(
             ConvBlock(1024, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             IdentityBlock(512, [512, 512, 512], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             nn.UpsamplingBilinear2d(scale_factor=2),
         )
 
-        self.layer7 = nn.Sequential(
+        self.layer8 = nn.Sequential(
             ConvBlock(512, [256, 256, 256], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             IdentityBlock(256, [256, 256, 256], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             nn.UpsamplingBilinear2d(scale_factor=2),
         )
 
-        self.layer8 = nn.Sequential(
+        self.layer9 = nn.Sequential(
             ConvBlock(256, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             IdentityBlock(128, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             nn.UpsamplingBilinear2d(scale_factor=2),
         )
 
-        self.layer9 = nn.Sequential(
+        self.layer10 = nn.Sequential(
             ConvBlock(128, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             IdentityBlock(64, [64, 64, 64], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             nn.UpsamplingBilinear2d(scale_factor=2),
         )
 
-        self.layer10 = nn.Sequential(
+        self.layer11 = nn.Sequential(
             ConvBlock(64, [32, 32, 32], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             IdentityBlock(32, [32, 32, 32], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             nn.UpsamplingBilinear2d(scale_factor=2),
@@ -102,7 +107,7 @@ class ResNet45_10s(nn.Module):
 
         # decoder
         im = []
-        for layer in [self.layer6, self.layer7, self.layer8, self.layer9, self.layer10, self.conv2]:
+        for layer in [self.layer6, self.layer7, self.layer8, self.layer9, self.layer10, self.layer11, self.conv2]:
             im.append(x)
             x = layer(x)
 
