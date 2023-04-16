@@ -27,9 +27,15 @@ class ResNet45_10s(nn.Module):
             nn.ReLU(True),
         )
 
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(64, 128, stride=1, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128) if self.batchnorm else nn.Identity(),
+            nn.ReLU(True),
+        )
+
         # fcn
         self.layer1 = nn.Sequential(
-            ConvBlock(64, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
+            ConvBlock(128, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
             IdentityBlock(128, [128, 128, 128], kernel_size=3, stride=1, batchnorm=self.batchnorm),
         )
 
@@ -90,7 +96,7 @@ class ResNet45_10s(nn.Module):
         )
 
         # conv2
-        self.conv2 = nn.Sequential(
+        self.conv3 = nn.Sequential(
             ConvBlock(32, [16, 16, self.output_dim], kernel_size=3, stride=1,
                       final_relu=False, batchnorm=self.batchnorm),
             IdentityBlock(self.output_dim, [16, 16, self.output_dim], kernel_size=3, stride=1,
@@ -102,12 +108,12 @@ class ResNet45_10s(nn.Module):
         in_shape = x.shape
 
         # encoder
-        for layer in [self.conv1, self.layer1, self.layer2, self.layer3, self.layer4, self.layer5]:
+        for layer in [self.conv1,self.conv2, self.layer1, self.layer2, self.layer3, self.layer4, self.layer5]:
             x = layer(x)
 
         # decoder
         im = []
-        for layer in [self.layer6, self.layer7, self.layer8, self.layer9, self.layer10, self.conv2]:
+        for layer in [self.layer6, self.layer7, self.layer8, self.layer9, self.layer10, self.conv3]:
             im.append(x)
             x = layer(x)
 
